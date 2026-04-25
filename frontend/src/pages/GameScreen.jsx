@@ -4,7 +4,7 @@ import useVoice from '../hooks/useVoice'
 import useSpeech from '../hooks/useSpeech'
 
 const MAX_TURNS = 8
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API = 'http://localhost:8000'
 
 function parseTip(text) {
   const idx = text.indexOf('[💡')
@@ -35,7 +35,9 @@ export default function GameScreen({ config, onScore }) {
 
   async function callChat(message) {
     const { data } = await axios.post(`${API}/chat`, {
-      ...config,
+      scenario_id: config.scenario_id,
+      language: config.language,
+      difficulty: config.difficulty,
       history: historyRef.current,
       message,
     })
@@ -53,6 +55,8 @@ export default function GameScreen({ config, onScore }) {
       const { message, tip } = parseTip(reply)
       setDisplayMsgs([{ role: 'assistant', message, tip }])
       speak(message, config.language)
+    } catch (err) {
+      setDisplayMsgs([{ role: 'error', message: `Backend error: ${err.response?.data?.detail || err.message}. Is the backend running?` }])
     } finally {
       setLoading(false)
     }
@@ -77,11 +81,18 @@ export default function GameScreen({ config, onScore }) {
       setTurn(newTurn)
       if (newTurn >= MAX_TURNS) {
         const { data: scoreData } = await axios.post(`${API}/score`, {
-          ...config,
+          scenario_id: config.scenario_id,
+          language: config.language,
+          difficulty: config.difficulty,
           history: historyRef.current,
         })
         onScore(scoreData)
       }
+    } catch (err) {
+      setDisplayMsgs((prev) => [
+        ...prev,
+        { role: 'error', message: `Error: ${err.response?.data?.detail || err.message}` },
+      ])
     } finally {
       setLoading(false)
     }
@@ -110,20 +121,26 @@ export default function GameScreen({ config, onScore }) {
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
         {displayMsgs.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className="max-w-xs md:max-w-md">
-              <div
-                className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                  m.role === 'user' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-100'
-                }`}
-              >
+            {m.role === 'error' ? (
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl px-4 py-3 text-sm">
                 {m.message}
               </div>
-              {m.tip && (
-                <div className="mt-1.5 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-300 text-xs leading-relaxed">
-                  {m.tip}
+            ) : (
+              <div className="max-w-xs md:max-w-md">
+                <div
+                  className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    m.role === 'user' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-100'
+                  }`}
+                >
+                  {m.message}
                 </div>
-              )}
-            </div>
+                {m.tip && (
+                  <div className="mt-1.5 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-300 text-xs leading-relaxed">
+                    {m.tip}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
         {loading && (

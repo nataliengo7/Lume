@@ -28,13 +28,12 @@ app.add_middleware(
 )
 
 
-def to_gemini_contents(history: list, message: str) -> list:
-    contents = []
+def to_gemini_history(history: list) -> list:
+    result = []
     for msg in history:
         role = "model" if msg["role"] == "assistant" else "user"
-        contents.append({"role": role, "parts": [{"text": msg["content"]}]})
-    contents.append({"role": "user", "parts": [{"text": message}]})
-    return contents
+        result.append({"role": role, "parts": [msg["content"]]})
+    return result
 
 
 class ChatRequest(BaseModel):
@@ -59,8 +58,8 @@ async def chat(req: ChatRequest):
         model_name="gemini-2.0-flash",
         system_instruction=system,
     )
-    contents = to_gemini_contents(req.history, req.message)
-    response = model.generate_content(contents)
+    chat_session = model.start_chat(history=to_gemini_history(req.history))
+    response = chat_session.send_message(req.message)
     return {"reply": response.text}
 
 

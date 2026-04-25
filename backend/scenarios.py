@@ -1,0 +1,32 @@
+SCENARIOS = {
+    "coffee_shop": {
+        "id": "coffee_shop",
+        "title": "Café Order",
+        "character": "Sofia",
+        "character_role": "barista",
+        "setting": "A busy café in the city center",
+        "goal": "Order a coffee and pastry, ask for the wifi password",
+        "vocabulary_targets": ["coffee", "order", "please", "thank you", "how much", "wifi", "milk", "sugar"],
+        "turns_to_complete": 8,
+    },
+    "job_interview": {
+        "id": "job_interview",
+        "title": "Job Interview",
+        "character": "Marco",
+        "character_role": "HR manager",
+        "setting": "A modern office meeting room",
+        "goal": "Introduce yourself, describe your experience, and ask about the role",
+        "vocabulary_targets": ["experience", "skills", "team", "project", "opportunity", "motivated", "background", "position"],
+        "turns_to_complete": 8,
+    },
+    "medical_consultation": {
+        "id": "medical_consultation",
+        "title": "Doctor's Appointment",
+        "character": "Dr. Chen",
+        "character_role": "general practitioner",
+        "setting": "A doctor's consultation room",
+        "goal": "Describe your symptoms to the doctor and understand the diagnosis and treatment",
+        "vocabulary_targets": ["pain", "symptom", "fever", "headache", "medication", "diagnosis", "treatment", "prescription", "allergy"],
+        "turns_to_complete": 8,
+    },
+}

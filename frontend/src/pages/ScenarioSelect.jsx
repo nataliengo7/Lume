@@ -22,6 +22,48 @@ const SCENARIOS = [
     emoji: '🏥',
     character: 'Dr. Chen',
   },
+  {
+   id: 'clothing_store',
+    title: 'Shopping for Clothes',
+    description: 'Find an outfit for a special occasion and complete a purchase',
+    emoji: '👗',
+    character: 'Marie the store employee',
+  },
+   {
+    id: 'hotel_check_in',
+    title: 'Hotel Check-In',
+    description: 'Check in to your room and ask about amenities and local spots',
+    emoji: '🏨',
+    character: 'Juan the front desk worker',
+  },
+  {
+    id: 'grocery_store',
+    title: 'Grocery Shopping',
+    description: 'Find items on your list and check out at the register',
+    emoji: '🛒',
+    character: 'Lucas the store employee',
+  },
+  {
+    id: 'airport',
+    title: 'Airport Check-In',
+    description: 'Check in for your flight and find your gate',
+    emoji: '✈️',
+    character: 'Annie the check-in agent',
+  },
+  {
+    id: 'restaurant',
+    title: 'Restaurant Dinner',
+    description: 'Order food and drinks and handle the bill',
+    emoji: '🍽️',
+    character: 'Jack the waiter',
+  },
+  {
+    id: 'subway',
+    title: 'Subway Navigation',
+    description: 'Buy a ticket and find the right train to your destination',
+    emoji: '🚇',
+    character: 'Kenji the transit worker',
+  },
 ]
 
 const LANGUAGES = [

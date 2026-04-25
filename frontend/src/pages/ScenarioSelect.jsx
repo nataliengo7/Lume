@@ -54,16 +54,20 @@ export default function ScenarioSelect({ onStart }) {
           <button
             key={s.id}
             onClick={() => setSelected(s.id)}
-            className={`p-6 rounded-xl border text-left transition-all ${
+            className={`rounded-xl border text-left transition-all overflow-hidden ${
               selected === s.id
                 ? 'border-violet-500 bg-violet-500/10'
                 : 'border-gray-700 bg-gray-900 hover:border-gray-600'
             }`}
           >
-            <div className="text-4xl mb-3">{s.emoji}</div>
-            <h3 className="font-semibold text-lg mb-1">{s.title}</h3>
-            <p className="text-gray-400 text-sm mb-2">{s.description}</p>
-            <p className="text-gray-600 text-xs">with {s.character}</p>
+            <div className="flex items-center justify-center h-28 bg-gray-800 text-5xl">
+              {s.emoji}
+            </div>
+            <div className="p-4">
+              <h3 className="font-semibold text-lg mb-1">{s.title}</h3>
+              <p className="text-gray-400 text-sm mb-2">{s.description}</p>
+              <p className="text-gray-600 text-xs">with {s.character}</p>
+            </div>
           </button>
         ))}
       </div>

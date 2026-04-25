@@ -325,7 +325,7 @@ export default function GameScreen({ config, onScore }) {
                         m.role === 'user' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-100'
                       }`}
                     >
-                      {m.message}
+                      <ReactMarkdown>{m.message}</ReactMarkdown>
                     </div>
                     {m.tip && (
                       <div className="mt-1.5 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-300 text-xs leading-relaxed">

@@ -9,6 +9,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const SCENE_META = {
   coffee_shop: {
+    image: '/images/cafe.jpg',
     portraitEmoji: '👩‍💼',
     bgEmoji: '☕',
     bgGradient: 'linear-gradient(135deg, #431407 0%, #1c1917 60%, #030712 100%)',
@@ -17,6 +18,7 @@ const SCENE_META = {
     setting: 'A busy café in the city center',
   },
   job_interview: {
+    image: '/images/interview.webp',
     portraitEmoji: '👨‍💼',
     bgEmoji: '🏢',
     bgGradient: 'linear-gradient(135deg, #172554 0%, #0f172a 60%, #030712 100%)',
@@ -25,6 +27,7 @@ const SCENE_META = {
     setting: 'A modern office meeting room',
   },
   medical_consultation: {
+    image: '/images/doctors.jpg',
     portraitEmoji: '👨‍⚕️',
     bgEmoji: '🏥',
     bgGradient: 'linear-gradient(135deg, #042f2e 0%, #111827 60%, #030712 100%)',
@@ -290,12 +293,14 @@ export default function GameScreen({ config, onScore }) {
         {/* Scene Panel — picture at top */}
         <div
           className="relative flex-shrink-0 overflow-hidden border-b border-violet-900/30"
-          style={{ height: '40%', background: meta.bgGradient }}
+          style={{ height: '40%' }}
         >
-          {/* Faded background emoji */}
-          <div className="absolute inset-0 flex items-center justify-center text-[10rem] opacity-[0.07] select-none pointer-events-none">
-            {meta.bgEmoji}
-          </div>
+          <img
+            src={meta.image}
+            alt="scene"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/50" />
 
           {/* Top-left: scenario title */}
           <div className="absolute top-4 left-4">

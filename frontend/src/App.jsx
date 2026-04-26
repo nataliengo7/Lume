@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import LoginScreen from './pages/LoginScreen'
 import ScenarioSelect from './pages/ScenarioSelect'
 import GameScreen from './pages/GameScreen'
 import ScoreScreen from './pages/ScoreScreen'
 
 export default function App() {
-  const [screen, setScreen] = useState('select')
+  const [screen, setScreen] = useState('login')
   const [config, setConfig] = useState(null)
   const [scoreData, setScoreData] = useState(null)
 
@@ -27,9 +28,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
+      {screen === 'login'  && <LoginScreen onLogin={() => setScreen('select')} />}
       {screen === 'select' && <ScenarioSelect onStart={handleStart} />}
-      {screen === 'game' && <GameScreen config={config} onScore={handleScore} />}
-      {screen === 'score' && <ScoreScreen scoreData={scoreData} onRestart={handleRestart} />}
+      {screen === 'game'   && <GameScreen config={config} onScore={handleScore} />}
+      {screen === 'score'  && <ScoreScreen scoreData={scoreData} onRestart={handleRestart} />}
     </div>
   )
 }

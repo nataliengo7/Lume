@@ -62,9 +62,15 @@ async def chat(req: ChatRequest):
         model_name="gemini-2.5-flash",
         system_instruction=system,
     )
-    chat_session = model.start_chat(history=to_gemini_history(req.history))
-    response = chat_session.send_message(req.message)
-    return {"reply": response.text}
+    try:
+        chat_session = model.start_chat(history=to_gemini_history(req.history))
+        response = chat_session.send_message(req.message)
+        return {"reply": response.text}
+    except Exception as e:
+        msg = str(e)
+        if "quota" in msg.lower() or "429" in msg or "rate" in msg.lower():
+            raise HTTPException(status_code=429, detail="Gemini API quota exceeded. Check your API key or billing.")
+        raise HTTPException(status_code=500, detail=f"Gemini error: {msg}")
 
 
 @app.post("/score")

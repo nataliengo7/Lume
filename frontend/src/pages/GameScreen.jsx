@@ -129,7 +129,7 @@ export default function GameScreen({ config, onScore }) {
       if (tip) setCollectedTips([tip])
       speak(message, config.language)
     } catch (err) {
-      setDisplayMsgs([{ role: 'error', message: `Backend error: ${err.response?.data?.detail || err.message}. Is the backend running?` }])
+      setDisplayMsgs([{ role: 'error', message: `Error: ${err.response?.data?.detail || err.message}` }])
     } finally {
       setLoading(false)
     }

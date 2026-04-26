@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+const API = 'http://149.28.86.148:8000'
+
 const SCENARIOS = [
   { id: 'coffee_shop', title: 'Café Order', description: 'Order coffee and a pastry, get the wifi password', emoji: '☕', character: 'Sofia the barista' },
   { id: 'job_interview', title: 'Job Interview', description: 'Introduce yourself and discuss your experience', emoji: '💼', character: 'Marco the HR manager' },
@@ -35,12 +37,13 @@ export default function ScenarioSelect({ onStart }) {
 
     setGenerating(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/generate_scenario`, {  // ✅ fetch not axios
+      const res = await fetch(`${API}/generate_scenario`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, language })
       })
       const newScenario = await res.json()
+      if (!res.ok) throw new Error(newScenario.detail || 'Unknown error')
 
       setScenarios(prev => [...prev, {
         id: newScenario.id,

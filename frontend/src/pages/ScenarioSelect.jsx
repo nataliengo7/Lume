@@ -35,7 +35,7 @@ export default function ScenarioSelect({ onStart }) {
 
     setGenerating(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/generate_scenario`, {  // ✅ fetch not axios
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/generate_scenario`, {  // ✅ fetch not axios
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, language })

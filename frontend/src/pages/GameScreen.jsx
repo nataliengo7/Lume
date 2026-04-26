@@ -311,24 +311,18 @@ export default function GameScreen({ config, onScore }) {
 
         {/* Scene Panel */}
         <div
-<<<<<<< HEAD
-          className="relative flex-shrink-0 overflow-hidden border-b border-violet-900/30"
-          style={{ height: '40%' }}
-        >
-          <img
-            src={meta.image}
-            alt="scene"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/50" />
-=======
           className="relative flex-shrink-0 overflow-hidden"
           style={{ height: '38%', background: meta.bgGradient, borderBottom: '1px solid rgba(34,197,94,0.2)' }}
         >
+          {meta.image && (
+            <>
+              <img src={meta.image} alt="scene" className="absolute inset-0 w-full h-full object-cover"/>
+              <div className="absolute inset-0 bg-black/60"/>
+            </>
+          )}
           <div className="absolute inset-0 flex items-center justify-center text-[10rem] opacity-[0.06] select-none pointer-events-none">
             {meta.bgEmoji}
           </div>
->>>>>>> d5affff (Redesign frontend: dark green theme, city map, login page)
 
           <div className="absolute top-4 left-4">
             <h2 className="font-bold text-base text-white drop-shadow">{scenarioLabel}</h2>

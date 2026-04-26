@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import useVoice from '../hooks/useVoice'
 import useSpeech from '../hooks/useSpeech'
+import ReactMarkdown from 'react-markdown'
 
 const MAX_TURNS = 8
 const API = 'http://localhost:8000'
@@ -315,7 +316,7 @@ export default function GameScreen({ config, onScore }) {
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {m.role === 'error' ? (
                   <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl px-4 py-3 text-sm">
-                    {m.message}
+                    <ReactMarkdown>{m.message}</ReactMarkdown>
                   </div>
                 ) : (
                   <div className="max-w-xs md:max-w-lg">
@@ -324,7 +325,7 @@ export default function GameScreen({ config, onScore }) {
                         m.role === 'user' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-100'
                       }`}
                     >
-                      {m.message}
+                      <ReactMarkdown>{m.message}</ReactMarkdown>
                     </div>
                     {m.tip && (
                       <div className="mt-1.5 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-300 text-xs leading-relaxed">

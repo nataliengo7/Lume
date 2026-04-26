@@ -103,7 +103,7 @@ async def login(req: LoginRequest):
 async def chat(req: ChatRequest, user_id: str = Depends(get_current_user_id)):
     system = build_system_prompt(req.scenario_id, req.language, req.difficulty)
     model = genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
+        model_name="gemini-1.5-flash",
         system_instruction=system,
     )
     try:
@@ -140,7 +140,7 @@ async def score(req: ScoreRequest, user_id: str = Depends(get_current_user_id)):
         '{"score": <0-100>, "grammar_errors": ["<error>"], '
         '"strengths": "<one sentence>", "improvement": "<one actionable tip>"}'
     )
-    model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+    model = genai.GenerativeModel(model_name="gemini-1.5-flash")
     response = model.generate_content(prompt)
 
     text = response.text.strip()
@@ -174,7 +174,7 @@ class ScenarioRequest(BaseModel):
 
 @app.post("/generate_scenario")
 async def generate_scenario(req: ScenarioRequest):
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
     system = """
     You generate structured language-learning scenarios.
@@ -230,7 +230,7 @@ async def help_translate(req: HelpRequest):
             "2. A brief breakdown of 1-2 key words or phrases they should know\n\n"
             "Be concise and encouraging. Plain text only, no markdown."
         )
-        model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+        model = genai.GenerativeModel(model_name="gemini-1.5-flash")
         response = model.generate_content(prompt)
         return {"help": response.text}
     except Exception as e:

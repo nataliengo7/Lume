@@ -1,27 +1,41 @@
 import json
 import os
+import secrets
 
+import resend
 import google.generativeai as genai
+from bson import ObjectId
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
+from pymongo import MongoClient
 
 from prompts import build_system_prompt
-
-from scenarios import get_all_scenarios, add_scenario  # ✅ import these
-
-
+from scenarios import get_all_scenarios, add_scenario
+from auth import (
+    LoginRequest,
+    RegisterRequest,
+    create_access_token,
+    get_current_user_id,
+    hash_password,
+    verify_password,
+)
 
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+resend.api_key = os.getenv("RESEND_API_KEY")
+
+client = MongoClient(os.getenv("MONGODB_URI"))
+db = client["lume"]
 
 app = FastAPI()
 
 origins = ["http://localhost:5173", "http://localhost:5174"]
-if os.getenv("FRONTEND_URL"):
-    origins.append(os.getenv("FRONTEND_URL"))
+if frontend_url := os.getenv("FRONTEND_URL"):
+    origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,8 +69,38 @@ class ScoreRequest(BaseModel):
     history: list
 
 
+@app.post("/register")
+async def register(req: RegisterRequest):
+    if db.users.find_one({"email": req.email}):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    db.users.insert_one({
+        "email": req.email,
+        "password": hash_password(req.password),
+    })
+    user = db.users.find_one({"email": req.email})
+    return {"token": create_access_token(str(user["_id"]))}
+
+
+@app.get("/verify")
+async def verify_email(token: str):
+    user = db.users.find_one({"verify_token": token})
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification link")
+    db.users.update_one({"_id": user["_id"]}, {"$set": {"verified": True}, "$unset": {"verify_token": ""}})
+    frontend = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    return RedirectResponse(url=f"{frontend}/?verified=1")
+
+
+@app.post("/login")
+async def login(req: LoginRequest):
+    user = db.users.find_one({"email": req.email})
+    if not user or not verify_password(req.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    return {"token": create_access_token(str(user["_id"]))}
+
+
 @app.post("/chat")
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest, user_id: str = Depends(get_current_user_id)):
     system = build_system_prompt(req.scenario_id, req.language, req.difficulty)
     model = genai.GenerativeModel(
         model_name="gemini-2.5-flash",
@@ -65,7 +109,16 @@ async def chat(req: ChatRequest):
     try:
         chat_session = model.start_chat(history=to_gemini_history(req.history))
         response = chat_session.send_message(req.message)
-        return {"reply": response.text}
+        reply = response.text
+        db.conversations.update_one(
+            {"user_id": user_id, "scenario_id": req.scenario_id, "language": req.language, "difficulty": req.difficulty, "active": True},
+            {"$push": {"messages": [
+                {"role": "user", "content": req.message},
+                {"role": "assistant", "content": reply},
+            ]}},
+            upsert=True,
+        )
+        return {"reply": reply}
     except Exception as e:
         msg = str(e)
         if "quota" in msg.lower() or "429" in msg or "rate" in msg.lower():
@@ -74,7 +127,7 @@ async def chat(req: ChatRequest):
 
 
 @app.post("/score")
-async def score(req: ScoreRequest):
+async def score(req: ScoreRequest, user_id: str = Depends(get_current_user_id)):
     conversation = "\n".join(
         f"{'User' if m['role'] == 'user' else 'AI'}: {m['content']}"
         for m in req.history
@@ -97,9 +150,21 @@ async def score(req: ScoreRequest):
             text = text[:text.rfind("```")]
 
     try:
-        return json.loads(text)
+        result = json.loads(text)
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Score parse failed")
+
+    db.conversations.update_one(
+        {"user_id": user_id, "scenario_id": req.scenario_id, "language": req.language, "difficulty": req.difficulty, "active": True},
+        {"$set": {"score": result, "active": False}},
+    )
+    return result
+
+
+@app.get("/history")
+async def history(user_id: str = Depends(get_current_user_id)):
+    convos = list(db.conversations.find({"user_id": user_id}, {"_id": 0}))
+    return {"conversations": convos}
 
 
 class ScenarioRequest(BaseModel):

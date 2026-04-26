@@ -1,4 +1,8 @@
-export default function ScoreScreen({ scoreData, onRestart }) {
+import { useLocation, useNavigate } from 'react-router-dom'
+
+export default function ScoreScreen() {
+  const { state: scoreData } = useLocation()
+  const navigate = useNavigate()
   const { score = 0, grammar_errors = [], strengths = '', improvement = '' } = scoreData || {}
   const color = score >= 80 ? '#4ade80' : score >= 60 ? '#fbbf24' : '#f87171'
   const medal = score >= 80 ? '🏆' : score >= 60 ? '🥈' : '🎯'
@@ -38,7 +42,7 @@ export default function ScoreScreen({ scoreData, onRestart }) {
       )}
 
       <button
-        onClick={onRestart}
+        onClick={() => navigate('/select')}
         className="w-full py-4 rounded-2xl font-bold text-lg transition-all"
         style={{ background: '#166534', color: '#bbf7d0', border: '1px solid rgba(34,197,94,0.4)', boxShadow: '0 4px 0 #14532d' }}
       >

@@ -1,16 +1,50 @@
 import { useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import axios from 'axios'
 
-export default function LoginScreen({ onLogin }) {
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+export default function LoginScreen() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const justVerified = searchParams.get('verified') === '1'
   const [tab, setTab] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [showPass, setShowPass] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [checkEmail, setCheckEmail] = useState(false)
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    onLogin()
+    setError('')
+    setLoading(true)
+    try {
+      const endpoint = tab === 'signup' ? '/register' : '/login'
+      const { data } = await axios.post(`${API}${endpoint}`, { email, password })
+      localStorage.setItem('token', data.token)
+      navigate('/select')
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
   }
+
+  if (checkEmail) return (
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#060e08' }}>
+      <div className="text-center">
+        <div className="text-5xl mb-4">📬</div>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: '#4ade80' }}>Check your email</h2>
+        <p style={{ color: '#4b7a5a' }}>We sent a verification link to <strong style={{ color: '#a7f3d0' }}>{email}</strong></p>
+        <button onClick={() => setCheckEmail(false)} className="mt-6 text-xs" style={{ color: '#4b7a5a' }}>
+          Back to login
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#060e08' }}>
@@ -22,6 +56,13 @@ export default function LoginScreen({ onLogin }) {
       </div>
 
       <div style={{ width: '100%', maxWidth: 420, position: 'relative' }}>
+
+        {/* Verified banner */}
+        {justVerified && (
+          <div className="mb-6 px-4 py-3 rounded-xl text-center text-sm" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ade80' }}>
+            ✅ Email verified! You can now log in.
+          </div>
+        )}
 
         {/* Logo */}
         <div className="text-center mb-8">
@@ -141,15 +182,18 @@ export default function LoginScreen({ onLogin }) {
               </div>
             )}
 
+            {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+
             {/* Submit */}
             <button
               type="submit"
-              className="w-full py-3 rounded-xl font-bold text-base transition-all mt-2"
+              disabled={loading}
+              className="w-full py-3 rounded-xl font-bold text-base transition-all mt-2 disabled:opacity-50"
               style={{ background: '#166534', color: '#bbf7d0', border: '1px solid rgba(34,197,94,0.4)', boxShadow: '0 4px 0 #14532d' }}
               onMouseEnter={e => e.currentTarget.style.background = '#15803d'}
               onMouseLeave={e => e.currentTarget.style.background = '#166534'}
             >
-              {tab === 'login' ? 'Log In →' : 'Create Account →'}
+              {loading ? '...' : tab === 'login' ? 'Log In →' : 'Create Account →'}
             </button>
 
             {/* Divider */}
@@ -162,7 +206,7 @@ export default function LoginScreen({ onLogin }) {
             {/* Guest button */}
             <button
               type="button"
-              onClick={onLogin}
+              onClick={() => navigate('/select')}
               className="w-full py-3 rounded-xl font-bold text-sm transition-all"
               style={{ background: 'transparent', color: '#4b7a5a', border: '1px solid rgba(34,197,94,0.15)' }}
               onMouseEnter={e => { e.currentTarget.style.color = '#4ade80'; e.currentTarget.style.border = '1px solid rgba(34,197,94,0.3)' }}

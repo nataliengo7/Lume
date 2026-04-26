@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -33,7 +34,8 @@ const TREES = [
   [1640,290],[300,950],[2000,480],[1380,360],[550,200],[1880,1000],
 ]
 
-export default function ScenarioSelect({ onStart }) {
+export default function ScenarioSelect() {
+  const navigate = useNavigate()
   const [selected, setSelected] = useState(null)
   const [language, setLanguage] = useState('Spanish')
   const [difficulty, setDifficulty] = useState('Beginner')
@@ -300,7 +302,7 @@ export default function ScenarioSelect({ onStart }) {
 
           <div className="flex gap-3">
             <button
-              onClick={() => onStart({ scenario_id: selected, language, difficulty })}
+              onClick={() => navigate('/game', { state: { scenario_id: selected, language, difficulty } })}
               disabled={!selected}
               className="flex-1 py-3 rounded-xl font-bold text-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ background: '#166534', color: '#bbf7d0', border: '1px solid rgba(34,197,94,0.4)', boxShadow: '0 4px 0 #14532d' }}

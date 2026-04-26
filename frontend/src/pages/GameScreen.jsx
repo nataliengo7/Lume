@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import useVoice from '../hooks/useVoice'
 import useSpeech from '../hooks/useSpeech'
@@ -99,7 +100,10 @@ function parseTip(text) {
   return { message: text.slice(0, idx).trim(), tip: text.slice(idx) }
 }
 
-export default function GameScreen({ config, onScore }) {
+export default function GameScreen() {
+  const { state: config } = useLocation()
+  const navigate = useNavigate()
+  const token = localStorage.getItem('token')
   const [displayMsgs, setDisplayMsgs] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -125,6 +129,8 @@ export default function GameScreen({ config, onScore }) {
     fetchOpening()
   }, [])
 
+  const authHeaders = { headers: { Authorization: `Bearer ${token}` } }
+
   async function callChat(message) {
     const { data } = await axios.post(`${API}/chat`, {
       scenario_id: config.scenario_id,
@@ -132,7 +138,7 @@ export default function GameScreen({ config, onScore }) {
       difficulty: config.difficulty,
       history: historyRef.current,
       message,
-    })
+    }, authHeaders)
     return data.reply
   }
 
@@ -180,8 +186,8 @@ export default function GameScreen({ config, onScore }) {
           language: config.language,
           difficulty: config.difficulty,
           history: historyRef.current,
-        })
-        onScore(scoreData)
+        }, authHeaders)
+        navigate('/score', { state: scoreData })
       }
     } catch (err) {
       setDisplayMsgs((prev) => [
@@ -203,7 +209,7 @@ export default function GameScreen({ config, onScore }) {
       const { data } = await axios.post(`${API}/help`, {
         message: lastAI.message,
         language: config.language,
-      })
+      }, authHeaders)
       setHelpText(data.help)
     } catch (err) {
       setHelpText(`Error: ${err.response?.data?.detail || err.message}`)

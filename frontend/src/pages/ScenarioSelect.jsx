@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const API = 'http://149.28.86.148:8000'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const SCENARIOS = [
   { id: 'coffee_shop', title: 'Café Order', description: 'Order coffee and a pastry, get the wifi password', emoji: '☕', character: 'Sofia the barista' },

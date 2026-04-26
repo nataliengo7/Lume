@@ -5,7 +5,7 @@ import useSpeech from '../hooks/useSpeech'
 import ReactMarkdown from 'react-markdown'
 
 const MAX_TURNS = 8
-const API = 'http://149.28.86.148:8000'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const SCENE_META = {
   coffee_shop: {

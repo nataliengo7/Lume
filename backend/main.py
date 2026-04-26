@@ -9,6 +9,10 @@ from pydantic import BaseModel
 
 from prompts import build_system_prompt
 
+from scenarios import get_all_scenarios, add_scenario  # ✅ import these
+
+
+
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -90,3 +94,49 @@ async def score(req: ScoreRequest):
         return json.loads(text)
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Score parse failed")
+    
+class ScenarioRequest(BaseModel):
+    prompt: str
+    language: str
+
+@app.post("/generate_scenario")
+async def generate_scenario(req: ScenarioRequest):
+    model = genai.GenerativeModel("gemini-2.5-flash")
+
+    system = """
+    You generate structured language-learning scenarios.
+    Return ONLY valid JSON, no markdown fences, no extra text.
+
+    IMPORTANT: ALL fields (title, description, character, character_role, setting, goal) must be written in ENGLISH.
+    The language field only affects what language the USER will practice during the conversation — it does NOT affect the scenario metadata.
+
+    {
+    "id": "short_snake_case_id",
+    "title": "...",
+    "description": "one sentence summary in English",
+    "character": "first name only",
+    "character_role": "...",
+    "setting": "...",
+    "goal": "...",
+    "vocabulary_targets": ["word1", "word2"],
+    "turns_to_complete": 8
+    }"""
+
+    prompt = f"The user will be practicing {req.language}. User idea: {req.prompt}\nMake a realistic interactive scenario. All metadata in English."
+
+    response = model.generate_content(system + "\n\n" + prompt)
+    text = response.text.strip()
+
+    # same robust cleanup as /score
+    if text.startswith("```"):
+        text = text[text.find("\n") + 1:]
+        if "```" in text:
+            text = text[:text.rfind("```")]
+
+    try:
+        scenario = json.loads(text)
+        add_scenario(scenario)
+        return scenario
+    except json.JSONDecodeError as e:
+        print("JSON parse failed:", text)  # ← this will show in terminal
+        raise HTTPException(status_code=500, detail=f"Scenario generation failed: {str(e)}")

@@ -89,4 +89,13 @@ SCENARIOS = {
         "vocabulary_targets": ["ticket", "line", "transfer", "platform", "direction", "exit", "stop", "map", "fare"],
         "turns_to_complete": 8,
     },
+    
 }
+
+GENERATED_SCENARIOS = {}
+def add_scenario(scenario: dict):
+    GENERATED_SCENARIOS[scenario["id"]] = scenario
+
+
+def get_all_scenarios():
+    return {**SCENARIOS, **GENERATED_SCENARIOS}

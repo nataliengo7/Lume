@@ -1,69 +1,15 @@
 import { useState } from 'react'
 
 const SCENARIOS = [
-  {
-    id: 'coffee_shop',
-    title: 'Café Order',
-    description: 'Order coffee and a pastry, get the wifi password',
-    emoji: '☕',
-    character: 'Sofia the barista',
-  },
-  {
-    id: 'job_interview',
-    title: 'Job Interview',
-    description: 'Introduce yourself and discuss your experience',
-    emoji: '💼',
-    character: 'Marco the HR manager',
-  },
-  {
-    id: 'medical_consultation',
-    title: "Doctor's Appointment",
-    description: 'Describe your symptoms and understand the diagnosis',
-    emoji: '🏥',
-    character: 'Dr. Chen',
-  },
-  {
-   id: 'clothing_store',
-    title: 'Shopping for Clothes',
-    description: 'Find an outfit for a special occasion and complete a purchase',
-    emoji: '👗',
-    character: 'Marie the store employee',
-  },
-   {
-    id: 'hotel_check_in',
-    title: 'Hotel Check-In',
-    description: 'Check in to your room and ask about amenities and local spots',
-    emoji: '🏨',
-    character: 'Juan the front desk worker',
-  },
-  {
-    id: 'grocery_store',
-    title: 'Grocery Shopping',
-    description: 'Find items on your list and check out at the register',
-    emoji: '🛒',
-    character: 'Lucas the store employee',
-  },
-  {
-    id: 'airport',
-    title: 'Airport Check-In',
-    description: 'Check in for your flight and find your gate',
-    emoji: '✈️',
-    character: 'Annie the check-in agent',
-  },
-  {
-    id: 'restaurant',
-    title: 'Restaurant Dinner',
-    description: 'Order food and drinks and handle the bill',
-    emoji: '🍽️',
-    character: 'Jack the waiter',
-  },
-  {
-    id: 'subway',
-    title: 'Subway Navigation',
-    description: 'Buy a ticket and find the right train to your destination',
-    emoji: '🚇',
-    character: 'Kenji the transit worker',
-  },
+  { id: 'coffee_shop', title: 'Café Order', description: 'Order coffee and a pastry, get the wifi password', emoji: '☕', character: 'Sofia the barista' },
+  { id: 'job_interview', title: 'Job Interview', description: 'Introduce yourself and discuss your experience', emoji: '💼', character: 'Marco the HR manager' },
+  { id: 'medical_consultation', title: "Doctor's Appointment", description: 'Describe your symptoms and understand the diagnosis', emoji: '🏥', character: 'Dr. Chen' },
+  { id: 'clothing_store', title: 'Shopping for Clothes', description: 'Find an outfit for a special occasion and complete a purchase', emoji: '👗', character: 'Marie the store employee' },
+  { id: 'hotel_check_in', title: 'Hotel Check-In', description: 'Check in to your room and ask about amenities and local spots', emoji: '🏨', character: 'Juan the front desk worker' },
+  { id: 'grocery_store', title: 'Grocery Shopping', description: 'Find items on your list and check out at the register', emoji: '🛒', character: 'Lucas the store employee' },
+  { id: 'airport', title: 'Airport Check-In', description: 'Check in for your flight and find your gate', emoji: '✈️', character: 'Annie the check-in agent' },
+  { id: 'restaurant', title: 'Restaurant Dinner', description: 'Order food and drinks and handle the bill', emoji: '🍽️', character: 'Jack the waiter' },
+  { id: 'subway', title: 'Subway Navigation', description: 'Buy a ticket and find the right train to your destination', emoji: '🚇', character: 'Kenji the transit worker' },
 ]
 
 const LANGUAGES = [
@@ -80,6 +26,36 @@ export default function ScenarioSelect({ onStart }) {
   const [selected, setSelected] = useState(null)
   const [language, setLanguage] = useState('Spanish')
   const [difficulty, setDifficulty] = useState('Beginner')
+  const [scenarios, setScenarios] = useState(SCENARIOS)  // ✅ state not const
+  const [generating, setGenerating] = useState(false)
+
+  async function createScenario() {
+    const prompt = window.prompt("Describe your scenario idea:")
+    if (!prompt) return
+
+    setGenerating(true)
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/generate_scenario`, {  // ✅ fetch not axios
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, language })
+      })
+      const newScenario = await res.json()
+
+      setScenarios(prev => [...prev, {
+        id: newScenario.id,
+        title: newScenario.title,
+        description: newScenario.description,
+        emoji: '✨',
+        character: newScenario.character,
+      }])
+      setSelected(newScenario.id)  // ✅ setSelected not setScenario
+    } catch (e) {
+      alert("Failed to generate scenario")
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
@@ -91,8 +67,8 @@ export default function ScenarioSelect({ onStart }) {
       </div>
 
       <p className="text-sm text-gray-500 uppercase tracking-widest mb-4">Choose a scenario</p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {SCENARIOS.map((s) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        {scenarios.map((s) => (   // ✅ scenarios not SCENARIOS
           <button
             key={s.id}
             onClick={() => setSelected(s.id)}
@@ -114,6 +90,15 @@ export default function ScenarioSelect({ onStart }) {
         ))}
       </div>
 
+      {/* ✅ Create button inside return, after grid */}
+      <button
+        onClick={createScenario}
+        disabled={generating}
+        className="w-full mb-8 py-3 bg-gray-900 border border-dashed border-gray-600 rounded-xl text-gray-400 hover:border-violet-500 hover:text-violet-400 transition-all"
+      >
+        {generating ? 'Generating...' : '✨ Create Your Own Scenario'}
+      </button>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div>
           <p className="text-sm text-gray-500 uppercase tracking-widest mb-2">Language</p>
@@ -123,9 +108,7 @@ export default function ScenarioSelect({ onStart }) {
             className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500"
           >
             {LANGUAGES.map((l) => (
-              <option key={l.value} value={l.value}>
-                {l.flag} {l.value}
-              </option>
+              <option key={l.value} value={l.value}>{l.flag} {l.value}</option>
             ))}
           </select>
         </div>

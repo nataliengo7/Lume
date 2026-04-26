@@ -86,6 +86,9 @@ export default function GameScreen({ config, onScore }) {
   const [turn, setTurn] = useState(0)
   const [xp, setXp] = useState(0)
   const [collectedTips, setCollectedTips] = useState([])
+  const [helpOpen, setHelpOpen] = useState(false)
+  const [helpText, setHelpText] = useState('')
+  const [helpLoading, setHelpLoading] = useState(false)
   const historyRef = useRef([])
   const endRef = useRef(null)
   const { speak } = useSpeech()
@@ -167,6 +170,25 @@ export default function GameScreen({ config, onScore }) {
       ])
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function getHelp() {
+    const lastAI = [...displayMsgs].reverse().find((m) => m.role === 'assistant')
+    if (!lastAI) return
+    setHelpOpen(true)
+    setHelpLoading(true)
+    setHelpText('')
+    try {
+      const { data } = await axios.post(`${API}/help`, {
+        message: lastAI.message,
+        language: config.language,
+      })
+      setHelpText(data.help)
+    } catch (err) {
+      setHelpText(`Error: ${err.response?.data?.detail || err.message}`)
+    } finally {
+      setHelpLoading(false)
     }
   }
 
@@ -347,7 +369,24 @@ export default function GameScreen({ config, onScore }) {
           </div>
 
           {/* Input row */}
-          <div className="shrink-0" style={{ background: 'rgba(5,3,15,0.9)', borderTop: '1px solid rgba(139,92,246,0.2)', margin: '0 -1.5rem -1rem', padding: '1.25rem 1.5rem' }}>
+          <div className="shrink-0 relative" style={{ background: 'rgba(5,3,15,0.9)', borderTop: '1px solid rgba(139,92,246,0.2)', margin: '0 -1.5rem -1rem', padding: '1.25rem 1.5rem' }}>
+
+            {/* Help popup */}
+            {helpOpen && (
+              <div className="absolute bottom-full right-0 mb-3 w-80 rounded-xl z-50" style={{ background: 'rgba(10,8,20,0.97)', border: '1px solid rgba(139,92,246,0.4)', boxShadow: '0 0 30px rgba(88,28,135,0.4)' }}>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-violet-900/30">
+                  <span className="text-xs text-violet-400 tracking-widest uppercase">Translation Help</span>
+                  <button onClick={() => setHelpOpen(false)} className="text-gray-500 hover:text-white transition-colors text-sm">✕</button>
+                </div>
+                <div className="px-4 py-4 text-sm text-gray-300 leading-relaxed min-h-[80px]">
+                  {helpLoading
+                    ? <span className="text-gray-500 animate-pulse">Translating...</span>
+                    : <span className="whitespace-pre-wrap">{helpText}</span>
+                  }
+                </div>
+              </div>
+            )}
+
             <form onSubmit={(e) => { e.preventDefault(); sendMessage(input) }} className="flex gap-3">
               <input
                 value={input}
@@ -364,6 +403,14 @@ export default function GameScreen({ config, onScore }) {
                 }`}
               >
                 🎤
+              </button>
+              <button
+                type="button"
+                onClick={getHelp}
+                disabled={!displayMsgs.some(m => m.role === 'assistant')}
+                className="text-[10px] tracking-widest uppercase px-4 py-2 bg-emerald-900/50 hover:bg-emerald-800 text-emerald-300 rounded transition-all border border-emerald-700/40 disabled:opacity-30"
+              >
+                Need Help
               </button>
               <button
                 type="submit"

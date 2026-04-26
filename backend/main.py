@@ -94,10 +94,12 @@ async def score(req: ScoreRequest):
         return json.loads(text)
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Score parse failed")
-    
+
+
 class ScenarioRequest(BaseModel):
     prompt: str
     language: str
+
 
 @app.post("/generate_scenario")
 async def generate_scenario(req: ScenarioRequest):
@@ -127,7 +129,6 @@ async def generate_scenario(req: ScenarioRequest):
     response = model.generate_content(system + "\n\n" + prompt)
     text = response.text.strip()
 
-    # same robust cleanup as /score
     if text.startswith("```"):
         text = text[text.find("\n") + 1:]
         if "```" in text:
@@ -138,5 +139,28 @@ async def generate_scenario(req: ScenarioRequest):
         add_scenario(scenario)
         return scenario
     except json.JSONDecodeError as e:
-        print("JSON parse failed:", text)  # ← this will show in terminal
+        print("JSON parse failed:", text)
         raise HTTPException(status_code=500, detail=f"Scenario generation failed: {str(e)}")
+
+
+class HelpRequest(BaseModel):
+    message: str
+    language: str
+
+
+@app.post("/help")
+async def help_translate(req: HelpRequest):
+    try:
+        prompt = (
+            f"A language learner is practicing {req.language} and needs help understanding this phrase:\n\n"
+            f'"{req.message}"\n\n'
+            "Provide:\n"
+            "1. A natural English translation\n"
+            "2. A brief breakdown of 1-2 key words or phrases they should know\n\n"
+            "Be concise and encouraging. Plain text only, no markdown."
+        )
+        model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+        response = model.generate_content(prompt)
+        return {"help": response.text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

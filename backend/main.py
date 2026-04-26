@@ -9,6 +9,10 @@ from pydantic import BaseModel
 
 from prompts import build_system_prompt
 
+from scenarios import get_all_scenarios, add_scenario  # ✅ import these
+
+
+
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -90,3 +94,73 @@ async def score(req: ScoreRequest):
         return json.loads(text)
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Score parse failed")
+
+
+class ScenarioRequest(BaseModel):
+    prompt: str
+    language: str
+
+
+@app.post("/generate_scenario")
+async def generate_scenario(req: ScenarioRequest):
+    model = genai.GenerativeModel("gemini-2.5-flash")
+
+    system = """
+    You generate structured language-learning scenarios.
+    Return ONLY valid JSON, no markdown fences, no extra text.
+
+    IMPORTANT: ALL fields (title, description, character, character_role, setting, goal) must be written in ENGLISH.
+    The language field only affects what language the USER will practice during the conversation — it does NOT affect the scenario metadata.
+
+    {
+    "id": "short_snake_case_id",
+    "title": "...",
+    "description": "one sentence summary in English",
+    "character": "first name only",
+    "character_role": "...",
+    "setting": "...",
+    "goal": "...",
+    "vocabulary_targets": ["word1", "word2"],
+    "turns_to_complete": 8
+    }"""
+
+    prompt = f"The user will be practicing {req.language}. User idea: {req.prompt}\nMake a realistic interactive scenario. All metadata in English."
+
+    response = model.generate_content(system + "\n\n" + prompt)
+    text = response.text.strip()
+
+    if text.startswith("```"):
+        text = text[text.find("\n") + 1:]
+        if "```" in text:
+            text = text[:text.rfind("```")]
+
+    try:
+        scenario = json.loads(text)
+        add_scenario(scenario)
+        return scenario
+    except json.JSONDecodeError as e:
+        print("JSON parse failed:", text)
+        raise HTTPException(status_code=500, detail=f"Scenario generation failed: {str(e)}")
+
+
+class HelpRequest(BaseModel):
+    message: str
+    language: str
+
+
+@app.post("/help")
+async def help_translate(req: HelpRequest):
+    try:
+        prompt = (
+            f"A language learner is practicing {req.language} and needs help understanding this phrase:\n\n"
+            f'"{req.message}"\n\n'
+            "Provide:\n"
+            "1. A natural English translation\n"
+            "2. A brief breakdown of 1-2 key words or phrases they should know\n\n"
+            "Be concise and encouraging. Plain text only, no markdown."
+        )
+        model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+        response = model.generate_content(prompt)
+        return {"help": response.text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
